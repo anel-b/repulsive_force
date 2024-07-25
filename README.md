@@ -44,7 +44,9 @@ colcon build --package-select repulsive_force
 source ~/franka_ros2_ws/install/setup.bash
 ```
 
-For the controller just replace the .hpp and .cpp file
+### Controller
+
+Replace the .hpp and .cpp files from the controller with the modified controller files from this repository
 
 ## Extras
 
