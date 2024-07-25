@@ -26,17 +26,15 @@ class RepulsiveForcePublisher(Node):
         # Initialize ZED camera
         self.zed = sl.Camera()
         self.init_params = sl.InitParameters()
-        self.init_params.sdk_verbose = False
+        self.init_params.coordinate_units = sl.UNIT.METER
+        self.init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP
         self.init_params.camera_resolution = sl.RESOLUTION.HD720
         self.init_params.depth_mode = sl.DEPTH_MODE.PERFORMANCE
-        self.init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP
-        self.init_params.coordinate_units = sl.UNIT.METER
-        self.runtime_parameters = sl.RuntimeParameters()
 
         # Open ZED camera
         self.err = self.zed.open(self.init_params)
         if self.err != sl.ERROR_CODE.SUCCESS:
-            self.get_logger().info('Error {}, exit program'.format(self.err))
+            self.get_logger().info('Error %s, exit program' % self.err)
             self.zed.close()
             exit(1)
 
@@ -75,14 +73,11 @@ class RepulsiveForcePublisher(Node):
         # Extract point cloud data from ZED camera
         point_cloud_data = point_cloud_camera.get_data()
         points_data = point_cloud_data[:, :, :3].reshape(-1, 3)
-        rgba_data = point_cloud_data[:, :, 3].reshape(-1, 1)
+        points_data = points_data[::40]
 
-        # Convert RGBA data to RGB values
-        rgba_data = int(rgba_data)
-        r_data = (rgba_data >> 24) & 0xFF
-        g_data = (rgba_data >> 16) & 0xFF
-        b_data = (rgba_data >> 8) & 0xFF
-        colors_data = np.stack((r_data, g_data, b_data), axis=1) / 255.0
+        # Color point cloud data with green
+        colors_data = np.zeros((len(points_data), 3))
+        colors_data[:, 1] = 1.0
 
         # Save point cloud data as Open3D point cloud
         point_cloud = o3d.geometry.PointCloud()
@@ -93,8 +88,8 @@ class RepulsiveForcePublisher(Node):
 
     def remove_background(self, point_cloud: o3d.geometry.PointCloud):
         # Crop point cloud to workspace
-        min_bound = np.array([-0.3, -1.2, -0.03])
-        max_bound = np.array([1.2, 1.2, 1.2])
+        min_bound = np.array([-0.4, -0.9, -0.03])
+        max_bound = np.array([1.2, 0.9, 1.4])
         bbox = o3d.geometry.AxisAlignedBoundingBox(min_bound=min_bound, max_bound=max_bound)
         point_cloud = point_cloud.crop(bbox)
 
@@ -102,8 +97,8 @@ class RepulsiveForcePublisher(Node):
 
     def remove_robot_arm(self, point_cloud: o3d.geometry.PointCloud):
         # Split point cloud into smaller workspace and outside workspace
-        min_bound = np.array([-0.3, -1.2, 0.01])
-        max_bound = np.array([1.2, 1.2, 1.2])
+        min_bound = np.array([-0.4, -0.9, 0.01])
+        max_bound = np.array([1.2, 0.9, 1.4])
         bbox = o3d.geometry.AxisAlignedBoundingBox(min_bound=min_bound, max_bound=max_bound)
         indices = bbox.get_point_indices_within_bounding_box(point_cloud.points)
         point_cloud_workspace = point_cloud.select_by_index(indices, invert=False)
@@ -134,9 +129,9 @@ class RepulsiveForcePublisher(Node):
 
     def add_obstacle(self, point_cloud: o3d.geometry.PointCloud):
         # Define dimensions of obstacle
-        min_bound = np.array([0.49, -0.2, 0.1])
-        max_bound = np.array([0.5, 0.3, 0.9])
-        step = 0.02
+        min_bound = np.array([0.45, -0.1, 0.4])
+        max_bound = np.array([0.55, 0.1, 0.6])
+        step = 0.01
         x = np.arange(min_bound[0], max_bound[0], step)
         y = np.arange(min_bound[1], max_bound[1], step)
         z = np.arange(min_bound[2], max_bound[2], step)
@@ -154,16 +149,17 @@ class RepulsiveForcePublisher(Node):
 
     def get_point_cloud(self):
         # Get point cloud data from ZED camera
-        if self.zed.grab(self.runtime_parameters) == sl.ERROR_CODE.SUCCESS:
+        runtime_parameters = sl.RuntimeParameters()
+        if self.zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS:
             point_cloud_camera = sl.Mat()
             self.zed.retrieve_measure(point_cloud_camera, sl.MEASURE.XYZRGBA)
             point_cloud = self.extract_point_cloud(point_cloud_camera)
         else:
-            self.get_logger().info('Error grabbing point cloud data!')
+            self.get_logger().info('Error retrieving point cloud data, exit program')
+            self.zed.close()
             exit(1)
 
         # Point cloud preprocessing
-        point_cloud = point_cloud.uniform_down_sample(every_k_points=40)
         point_cloud = point_cloud.transform(self.transformation)
         point_cloud = self.remove_background(point_cloud)
         point_cloud = self.remove_robot_arm(point_cloud)
@@ -181,7 +177,7 @@ class RepulsiveForcePublisher(Node):
         # Publish point cloud data as PointCloud2 message
         msg = PointCloud2()
         msg.header = Header()
-        msg.header.frame_id = 'world'
+        msg.header.frame_id = 'panda_link0'
         msg.height = 1
         msg.width = len(point_cloud_data)
         msg.fields = [
@@ -205,7 +201,7 @@ class RepulsiveForcePublisher(Node):
         point_cloud_tree = o3d.geometry.KDTreeFlann(point_cloud)        
         [_, idx, dist] = point_cloud_tree.search_knn_vector_3d(self.end_effector_position, 1)
         coordinates = point_cloud.points[idx[0]]
-        distance = dist[0]
+        distance = np.sqrt(dist[0])
 
         return coordinates, distance
 
@@ -220,14 +216,19 @@ class RepulsiveForcePublisher(Node):
         coordinates, distance = self.get_nearest_point(point_cloud)
 
         # Calculate F_repulsion
-        safe_distance = 0.05
-        gain = 4.0
+        safe_distance = 0.1
+        gain = 1.0
+        if distance == 0:
+            distance = 0.001
+            coordinates[2] = -0.001
         if distance < safe_distance:
-            if distance == 0:
-                distance = 1e-6
-            F_repulsion = gain * ((1.0 / distance - 1.0 / safe_distance) ** 0.6) * np.gradient(self.end_effector_position - coordinates)
+            F_repulsion = gain * (1.0 / distance - 1.0 / safe_distance) * (self.end_effector_position - coordinates) / distance
         else:
             F_repulsion = np.zeros(3)
+
+        # Limit F_repulsion to 20 N
+        if np.linalg.norm(F_repulsion) > 20.0:
+            F_repulsion = 20.0 * F_repulsion / np.linalg.norm(F_repulsion)
 
         # Publish F_repulsion as WrenchStamped message
         msg = WrenchStamped()

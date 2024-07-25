@@ -58,8 +58,8 @@ class RepulsiveForcePublisher(Node):
 
     def remove_background(self, point_cloud: o3d.geometry.PointCloud):
         # Crop point cloud to workspace
-        min_bound = np.array([-0.3, -1.2, -0.03])
-        max_bound = np.array([1.2, 1.2, 1.2])
+        min_bound = np.array([-0.4, -0.9, -0.03])
+        max_bound = np.array([1.2, 0.9, 1.4])
         bbox = o3d.geometry.AxisAlignedBoundingBox(min_bound=min_bound, max_bound=max_bound)
         point_cloud = point_cloud.crop(bbox)
 
@@ -67,8 +67,8 @@ class RepulsiveForcePublisher(Node):
 
     def remove_robot_arm(self, point_cloud: o3d.geometry.PointCloud):
         # Split point cloud into smaller workspace and outside workspace
-        min_bound = np.array([-0.3, -1.2, 0.01])
-        max_bound = np.array([1.2, 1.2, 1.2])
+        min_bound = np.array([-0.4, -0.9, 0.01])
+        max_bound = np.array([1.2, 0.9, 1.4])
         bbox = o3d.geometry.AxisAlignedBoundingBox(min_bound=min_bound, max_bound=max_bound)
         indices = bbox.get_point_indices_within_bounding_box(point_cloud.points)
         point_cloud_workspace = point_cloud.select_by_index(indices, invert=False)
@@ -99,9 +99,9 @@ class RepulsiveForcePublisher(Node):
 
     def add_obstacle(self, point_cloud: o3d.geometry.PointCloud):
         # Define dimensions of obstacle
-        min_bound = np.array([0.49, -0.2, 0.1])
-        max_bound = np.array([0.5, 0.3, 0.9])
-        step = 0.02
+        min_bound = np.array([0.45, -0.1, 0.4])
+        max_bound = np.array([0.55, 0.1, 0.6])
+        step = 0.01
         x = np.arange(min_bound[0], max_bound[0], step)
         y = np.arange(min_bound[1], max_bound[1], step)
         z = np.arange(min_bound[2], max_bound[2], step)
@@ -137,7 +137,7 @@ class RepulsiveForcePublisher(Node):
         # Publish point cloud data as PointCloud2 message
         msg = PointCloud2()
         msg.header = Header()
-        msg.header.frame_id = 'world'
+        msg.header.frame_id = 'panda_link0'
         msg.height = 1
         msg.width = len(point_cloud_data)
         msg.fields = [
@@ -161,7 +161,7 @@ class RepulsiveForcePublisher(Node):
         point_cloud_tree = o3d.geometry.KDTreeFlann(point_cloud)        
         [_, idx, dist] = point_cloud_tree.search_knn_vector_3d(self.end_effector_position, 1)
         coordinates = point_cloud.points[idx[0]]
-        distance = dist[0]
+        distance = np.sqrt(dist[0])
 
         return coordinates, distance
 
@@ -176,14 +176,19 @@ class RepulsiveForcePublisher(Node):
         coordinates, distance = self.get_nearest_point(point_cloud)
 
         # Calculate F_repulsion
-        safe_distance = 0.05
-        gain = 4.0
+        safe_distance = 0.1
+        gain = 1.0
+        if distance == 0:
+            distance = 0.001
+            coordinates[2] = -0.001
         if distance < safe_distance:
-            if distance == 0:
-                distance = 1e-6
-            F_repulsion = gain * ((1.0 / distance - 1.0 / safe_distance) ** 0.6) * np.gradient(self.end_effector_position - coordinates)
+            F_repulsion = gain * (1.0 / distance - 1.0 / safe_distance) * (self.end_effector_position - coordinates) / distance
         else:
             F_repulsion = np.zeros(3)
+
+        # Limit F_repulsion to 20 N
+        if np.linalg.norm(F_repulsion) > 20.0:
+            F_repulsion = 20.0 * F_repulsion / np.linalg.norm(F_repulsion)
 
         # Publish F_repulsion as WrenchStamped message
         msg = WrenchStamped()

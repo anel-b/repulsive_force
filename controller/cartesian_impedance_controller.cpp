@@ -319,9 +319,9 @@ controller_interface::return_type CartesianImpedanceController::update(const rcl
     */
     //START Repulsion force
     std::cout << "--------" << std::endl;
-    std::cout << "F_impedance = " << F_impedance[0] << ", " << F_impedance[1] << ", " << F_impedance[2] << std::endl;
-    std::cout << "F_repulsion = " << F_repulsion[0] << ", " << F_repulsion[1] << ", " << F_repulsion[2] << std::endl;
-    std::cout << "F_total = " << F_impedance[0] + F_repulsion[0] << ", " << F_impedance[1] + F_repulsion[1] << ", " << F_impedance[2] + F_repulsion[2] << std::endl;
+    std::cout << "F_impedance = [" << F_impedance[0] << " " << F_impedance[1] << " " << F_impedance[2] << "]" << std::endl;
+    std::cout << "F_repulsion = [" << F_repulsion[0] << " " << F_repulsion[1] << " " << F_repulsion[2] << "]" << std::endl;
+    std::cout << "F_total = [" << F_impedance[0] + F_repulsion[0] << " " << F_impedance[1] + F_repulsion[1] << " " << F_impedance[2] + F_repulsion[2] << "]" << std::endl;
     //END Repulsion force
   }
   outcounter++;
