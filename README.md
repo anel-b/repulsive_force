@@ -7,10 +7,10 @@ ROS 2 Humble package that computes a repulsive force on a robot arm's end effect
 ### Containment of "repulsive_force" package:
 
 2 Nodes:<br>
-* f_repulsion.py<br>(computes repulsive force from nearest point in point cloud from ZED camera relative to end effector and publishes it)
-* f_repulsion_v2.py<br>(computes repulsive force from nearest point in point cloud from .ply file relative to end effector and publishes it)
+* f_repulsion.py<br>(computes repulsive force from nearest point in point cloud from .ply file relative to end effector and publishes it)
+* f_repulsion_v2.py<br>(computes repulsive force from nearest point in point cloud from ZED camera relative to end effector and publishes it)
 
-Controller modified [(source)](https://github.com/CurdinDeplazes/cartesian_impedance_control):<br>
+Controller modified ([source](https://github.com/CurdinDeplazes/cartesian_impedance_control)):<br>
 * cartesian_impedance_controller.hpp<br>(declares needed functions and variables)
 * cartesian_impedance_controller.cpp<br>(subscribes to the f_repulsion topic and includes the repulsive force in the controller loop)
 
