@@ -111,7 +111,7 @@ class RepulsiveForcePublisher(Node):
         xx, yy, zz = np.meshgrid(x, y, z)
 
         # Create point cloud of red obstacle
-        points = np.vstack((xx.ravel(), yy.ravel(), zz.ravel())).T
+        points = np.column_stack((xx.ravel(), yy.ravel(), zz.ravel()))
         colors = np.zeros((len(points), 3))
         colors[:, 0] = 1.0
         obstacle = o3d.geometry.PointCloud()

@@ -84,7 +84,7 @@ class RepulsiveForcePublisher(Node):
         r_data = (rgba_data >> 0) & 0xFF
         g_data = (rgba_data >> 8) & 0xFF
         b_data = (rgba_data >> 16) & 0xFF
-        colors_data = np.stack((r_data, g_data, b_data), axis=-1) / 255.0
+        colors_data = np.column_stack((r_data, g_data, b_data)) / 255.0
 
         # Save point cloud data as Open3D point cloud
         point_cloud = o3d.geometry.PointCloud()
@@ -145,7 +145,7 @@ class RepulsiveForcePublisher(Node):
         xx, yy, zz = np.meshgrid(x, y, z)
 
         # Create point cloud of red obstacle
-        points = np.vstack((xx.ravel(), yy.ravel(), zz.ravel())).T
+        points = np.column_stack((xx.ravel(), yy.ravel(), zz.ravel()))
         colors = np.zeros((len(points), 3))
         colors[:, 0] = 1.0
         obstacle = o3d.geometry.PointCloud()
