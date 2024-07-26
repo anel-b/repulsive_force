@@ -22,23 +22,26 @@ class RepulsiveForcePublisher(Node):
         # Publisher for repulsive force to be used in cartesian impedance controller
         self.publisher_F_repulsion = self.create_publisher(WrenchStamped, 'F_repulsion_topic', 1)
 
-        base_matrix = np.array([[-1.000,  0.000,  0.000,  0.358],
-                                [ 0.000,  1.000,  0.000,  0.030],
-                                [ 0.000,  0.000, -1.000,  0.006],
-                                [ 0.000,  0.000,  0.000,  1.000]])
+        # Homogeneous transformation matrix from robot base frame (R) to chessboard frame (B)
+        R_T_RB = np.array([[-1.000,  0.000,  0.000,  0.358],
+                           [ 0.000,  1.000,  0.000,  0.030],
+                           [ 0.000,  0.000, -1.000,  0.006],
+                           [ 0.000,  0.000,  0.000,  1.000]])
 
-        transform_matrix = np.array([[ 0.5357,  0.5685, -0.6244,  0.5918],
-                                     [-0.8444,  0.3671, -0.3902,  0.6178],
-                                     [ 0.0074,  0.7363,  0.6767, -0.9096],
-                                     [ 0.0000,  0.0000,  0.0000,  1.0000]])
+        # Homogeneous transformation matrix from chessboard frame (B) to camera frame (C)
+        B_T_BC = np.array([[ 0.5357,  0.5685, -0.6244,  0.5918],
+                           [-0.8444,  0.3671, -0.3902,  0.6178],
+                           [ 0.0074,  0.7363,  0.6767, -0.9096],
+                           [ 0.0000,  0.0000,  0.0000,  1.0000]])
 
-        rotation_matrix = np.array([[ 1.000,  0.000,  0.000,  0.140],
-                                    [ 0.000, -1.000,  0.000,  0.040],
-                                    [ 0.000,  0.000, -1.000, -0.040],
-                                    [ 0.000,  0.000,  0.000,  1.000]])
+        # Homogeneous transformation matrix for correcting camera orientation and position
+        C_T_CC = np.array([[ 1.000,  0.000,  0.000,  0.140],
+                           [ 0.000, -1.000,  0.000,  0.040],
+                           [ 0.000,  0.000, -1.000, -0.040],
+                           [ 0.000,  0.000,  0.000,  1.000]])
 
-        # Transformation matrix from camera frame to robot base frame
-        self.transformation = base_matrix @ transform_matrix @ rotation_matrix
+        # Homogeneous transformation matrix from robot base frame (R) to camera frame (C)
+        self.R_T_RC = R_T_RB @ B_T_BC @ C_T_CC
 
         # Read point cloud data from .ply file
         self.file = '/home/anyba/franka_ros2_ws/src/repulsive_force/point_cloud_data/pc_workspace.ply'
@@ -120,7 +123,7 @@ class RepulsiveForcePublisher(Node):
     def get_point_cloud(self):
         # Point cloud preprocessing
         point_cloud = self.point_cloud.uniform_down_sample(every_k_points=40)
-        point_cloud = point_cloud.transform(self.transformation)
+        point_cloud = point_cloud.transform(self.R_T_RC)
         point_cloud = self.remove_background(point_cloud)
         point_cloud = self.remove_robot_arm(point_cloud)
         point_cloud, _ = point_cloud.remove_radius_outlier(nb_points=10, radius=0.05)

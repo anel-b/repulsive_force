@@ -26,9 +26,9 @@ class RepulsiveForcePublisher(Node):
         # Initialize ZED camera
         self.zed = sl.Camera()
         self.init_params = sl.InitParameters()
-        self.init_params.coordinate_units = sl.UNIT.METER
-        self.init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP
         self.init_params.camera_resolution = sl.RESOLUTION.HD720
+        self.init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP
+        self.init_params.coordinate_units = sl.UNIT.METER
         self.init_params.depth_mode = sl.DEPTH_MODE.PERFORMANCE
 
         # Open ZED camera
@@ -38,24 +38,26 @@ class RepulsiveForcePublisher(Node):
             self.zed.close()
             exit(1)
 
-        # Transformation matrices from camera calibration
-        base_matrix = np.array([[-1.000,  0.000,  0.000,  0.358],
-                                [ 0.000,  1.000,  0.000,  0.030],
-                                [ 0.000,  0.000, -1.000,  0.006],
-                                [ 0.000,  0.000,  0.000,  1.000]])
+        # Homogeneous transformation matrix from robot base frame (R) to chessboard frame (B)
+        R_T_RB = np.array([[-1.000,  0.000,  0.000,  0.358],
+                           [ 0.000,  1.000,  0.000,  0.030],
+                           [ 0.000,  0.000, -1.000,  0.006],
+                           [ 0.000,  0.000,  0.000,  1.000]])
 
-        transform_matrix = np.array([[ 0.5357,  0.5685, -0.6244,  0.5918],
-                                     [-0.8444,  0.3671, -0.3902,  0.6178],
-                                     [ 0.0074,  0.7363,  0.6767, -0.9096],
-                                     [ 0.0000,  0.0000,  0.0000,  1.0000]])
+        # Homogeneous transformation matrix from chessboard frame (B) to camera frame (C)
+        B_T_BC = np.array([[ 0.5357,  0.5685, -0.6244,  0.5918],
+                           [-0.8444,  0.3671, -0.3902,  0.6178],
+                           [ 0.0074,  0.7363,  0.6767, -0.9096],
+                           [ 0.0000,  0.0000,  0.0000,  1.0000]])
 
-        rotation_matrix = np.array([[ 1.000,  0.000,  0.000,  0.140],
-                                    [ 0.000, -1.000,  0.000,  0.040],
-                                    [ 0.000,  0.000, -1.000, -0.040],
-                                    [ 0.000,  0.000,  0.000,  1.000]])
+        # Homogeneous transformation matrix for correcting camera orientation and position
+        C_T_CC = np.array([[ 1.000,  0.000,  0.000,  0.140],
+                           [ 0.000, -1.000,  0.000,  0.040],
+                           [ 0.000,  0.000, -1.000, -0.040],
+                           [ 0.000,  0.000,  0.000,  1.000]])
 
-        # Transformation matrix from camera frame to robot base frame
-        self.transformation = base_matrix @ transform_matrix @ rotation_matrix
+        # Homogeneous transformation matrix from robot base frame (R) to camera frame (C)
+        self.R_T_RC = R_T_RB @ B_T_BC @ C_T_CC
 
         # Timer for publishing repulsive force every 0.03 seconds
         self.timer = self.create_timer(0.03, self.publish_F_repulsion)
@@ -160,7 +162,7 @@ class RepulsiveForcePublisher(Node):
             exit(1)
 
         # Point cloud preprocessing
-        point_cloud = point_cloud.transform(self.transformation)
+        point_cloud = point_cloud.transform(self.R_T_RC)
         point_cloud = self.remove_background(point_cloud)
         point_cloud = self.remove_robot_arm(point_cloud)
         point_cloud, _ = point_cloud.remove_radius_outlier(nb_points=10, radius=0.05)
