@@ -22,13 +22,13 @@ class RepulsiveForcePublisher(Node):
         # Publisher for repulsive force to be used in cartesian impedance controller
         self.publisher_F_repulsion = self.create_publisher(WrenchStamped, 'F_repulsion_topic', 1)
 
-        # Homogeneous transformation matrix from robot base frame (R) to chessboard frame (B)
+        # Homogeneous transformation matrix from robot base frame (R) to checkerboard frame (B)
         R_T_RB = np.array([[-1.000,  0.000,  0.000,  0.358],
                            [ 0.000,  1.000,  0.000,  0.030],
                            [ 0.000,  0.000, -1.000,  0.006],
                            [ 0.000,  0.000,  0.000,  1.000]])
 
-        # Homogeneous transformation matrix from chessboard frame (B) to camera frame (C)
+        # Homogeneous transformation matrix from checkerboard frame (B) to camera frame (C)
         B_T_BC = np.array([[ 0.5357,  0.5685, -0.6244,  0.5918],
                            [-0.8444,  0.3671, -0.3902,  0.6178],
                            [ 0.0074,  0.7363,  0.6767, -0.9096],
@@ -179,19 +179,19 @@ class RepulsiveForcePublisher(Node):
         coordinates, distance = self.get_nearest_point(point_cloud)
 
         # Calculate F_repulsion
-        safe_distance = 0.1
-        gain = 1.0
+        safe_distance = 0.2
+        gain = 10.0
         if distance == 0:
             distance = 0.001
             coordinates[2] = -0.001
         if distance < safe_distance:
-            F_repulsion = gain * (1.0 / distance - 1.0 / safe_distance) * (self.end_effector_position - coordinates) / distance
+            F_repulsion = gain * np.log(safe_distance / distance) * (self.end_effector_position - coordinates) / distance
         else:
             F_repulsion = np.zeros(3)
 
-        # Limit F_repulsion to 20 N
-        if np.linalg.norm(F_repulsion) > 20.0:
-            F_repulsion = 20.0 * F_repulsion / np.linalg.norm(F_repulsion)
+        # Limit F_repulsion to 50 N
+        if np.linalg.norm(F_repulsion) > 50.0:
+            F_repulsion = 50.0 * F_repulsion / np.linalg.norm(F_repulsion)
 
         # Publish F_repulsion as WrenchStamped message
         msg = WrenchStamped()

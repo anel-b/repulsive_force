@@ -123,7 +123,7 @@ public:
     franka_hardware::FrankaHardwareInterface interfaceClass;
     std::unique_ptr<franka_semantic_components::FrankaRobotModel> franka_robot_model_;
     const double delta_tau_max_{1.0};
-    const double dt = 0.001;
+    const double dt = 0.001;                                                                 // time step
                 
     //Impedance control variables              
     Eigen::Matrix<double, 6, 6> Lambda = IDENTITY;                                           // operational space mass matrix

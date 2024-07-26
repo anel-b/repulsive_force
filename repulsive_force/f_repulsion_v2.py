@@ -26,10 +26,12 @@ class RepulsiveForcePublisher(Node):
         # Initialize ZED camera
         self.zed = sl.Camera()
         self.init_params = sl.InitParameters()
+        self.init_params.set_from_serial_number(38580376)
         self.init_params.camera_resolution = sl.RESOLUTION.HD720
+        self.init_params.camera_fps = 60
+        self.init_params.depth_mode = sl.DEPTH_MODE.PERFORMANCE
         self.init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP
         self.init_params.coordinate_units = sl.UNIT.METER
-        self.init_params.depth_mode = sl.DEPTH_MODE.PERFORMANCE
 
         # Open ZED camera
         self.err = self.zed.open(self.init_params)
@@ -38,13 +40,13 @@ class RepulsiveForcePublisher(Node):
             self.zed.close()
             exit(1)
 
-        # Homogeneous transformation matrix from robot base frame (R) to chessboard frame (B)
+        # Homogeneous transformation matrix from robot base frame (R) to checkerboard frame (B)
         R_T_RB = np.array([[-1.000,  0.000,  0.000,  0.358],
                            [ 0.000,  1.000,  0.000,  0.030],
                            [ 0.000,  0.000, -1.000,  0.006],
                            [ 0.000,  0.000,  0.000,  1.000]])
 
-        # Homogeneous transformation matrix from chessboard frame (B) to camera frame (C)
+        # Homogeneous transformation matrix from checkerboard frame (B) to camera frame (C)
         B_T_BC = np.array([[ 0.5357,  0.5685, -0.6244,  0.5918],
                            [-0.8444,  0.3671, -0.3902,  0.6178],
                            [ 0.0074,  0.7363,  0.6767, -0.9096],
@@ -73,13 +75,16 @@ class RepulsiveForcePublisher(Node):
 
     def extract_point_cloud(self, point_cloud_camera: sl.Mat):
         # Extract point cloud data from ZED camera
-        point_cloud_data = point_cloud_camera.get_data()
-        points_data = point_cloud_data[:, :, :3].reshape(-1, 3)
-        points_data = points_data[::40]
+        point_cloud_data = point_cloud_camera.get_data().reshape(-1, 4)
+        points_data = point_cloud_data[:, :3]
+        rgba_data = point_cloud_data[:, 3:]
 
-        # Color point cloud data with green
-        colors_data = np.zeros((len(points_data), 3))
-        colors_data[:, 1] = 1.0
+        # Extract RGB values from RGBA data
+        rgba_data = np.frombuffer(rgba_data.tobytes(), dtype=np.uint32)
+        r_data = (rgba_data >> 0) & 0xFF
+        g_data = (rgba_data >> 8) & 0xFF
+        b_data = (rgba_data >> 16) & 0xFF
+        colors_data = np.stack((r_data, g_data, b_data), axis=-1) / 255.0
 
         # Save point cloud data as Open3D point cloud
         point_cloud = o3d.geometry.PointCloud()
@@ -218,19 +223,19 @@ class RepulsiveForcePublisher(Node):
         coordinates, distance = self.get_nearest_point(point_cloud)
 
         # Calculate F_repulsion
-        safe_distance = 0.1
-        gain = 1.0
+        safe_distance = 0.2
+        gain = 10.0
         if distance == 0:
             distance = 0.001
             coordinates[2] = -0.001
         if distance < safe_distance:
-            F_repulsion = gain * (1.0 / distance - 1.0 / safe_distance) * (self.end_effector_position - coordinates) / distance
+            F_repulsion = gain * np.log(safe_distance / distance) * (self.end_effector_position - coordinates) / distance
         else:
             F_repulsion = np.zeros(3)
 
-        # Limit F_repulsion to 20 N
-        if np.linalg.norm(F_repulsion) > 20.0:
-            F_repulsion = 20.0 * F_repulsion / np.linalg.norm(F_repulsion)
+        # Limit F_repulsion to 50 N
+        if np.linalg.norm(F_repulsion) > 50.0:
+            F_repulsion = 50.0 * F_repulsion / np.linalg.norm(F_repulsion)
 
         # Publish F_repulsion as WrenchStamped message
         msg = WrenchStamped()
