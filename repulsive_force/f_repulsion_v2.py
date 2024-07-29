@@ -43,8 +43,8 @@ class RepulsiveForcePublisher(Node):
 
         # Initialize indices for random sampling of point cloud data by 1.5%
         self.number_of_points = 720 * 1280
-        self.filter = int(self.number_of_points * 0.015)
-        self.indices = np.random.choice(self.number_of_points, self.filter, replace=False)
+        self.sample = int(self.number_of_points * 0.015)
+        self.indices = np.random.choice(self.number_of_points, self.sample, replace=False)
 
         # Homogeneous transformation matrix from robot base frame (R) to checkerboard frame (B)
         R_T_RB = np.array([[-1.000,  0.000,  0.000,  0.358],
@@ -247,10 +247,10 @@ class RepulsiveForcePublisher(Node):
         # Calculate F_repulsion
         safe_distance = 0.2
         gain = 10.0
-        if distance == 0:
-            distance = 0.001
-            coordinates[2] = -0.001
         if distance < safe_distance:
+            if distance == 0:
+                distance = 0.001
+                coordinates[2] = -0.001
             F_repulsion = gain * np.log(safe_distance / distance) * (self.end_effector_position - coordinates) / distance
         else:
             F_repulsion = np.zeros(3)
