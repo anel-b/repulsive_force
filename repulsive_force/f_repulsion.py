@@ -4,6 +4,7 @@ from rclpy.node import Node
 from franka_msgs.msg import FrankaRobotState
 from sensor_msgs.msg import PointCloud2, PointField
 from std_msgs.msg import Header
+from sklearn.preprocessing import MinMaxScaler
 from sklearn.cluster import DBSCAN
 from geometry_msgs.msg import PoseStamped, WrenchStamped
 import open3d as o3d
@@ -21,6 +22,15 @@ class RepulsiveForcePublisher(Node):
 
         # Publisher for repulsive force to be used in cartesian impedance controller
         self.publisher_F_repulsion = self.create_publisher(WrenchStamped, 'F_repulsion_topic', 1)
+
+        # Read point cloud data from .ply file
+        self.file = '/home/anyba/franka_ros2_ws/src/repulsive_force/point_cloud_data/pc_workspace.ply'
+        self.point_cloud = o3d.io.read_point_cloud(self.file)
+
+        # Initialize indices for random sampling of point cloud data by 1.5%
+        self.number_of_points = 720 * 1280
+        self.filter = int(self.number_of_points * 0.015)
+        self.indices = np.random.choice(self.number_of_points, self.filter, replace=False)
 
         # Homogeneous transformation matrix from robot base frame (R) to checkerboard frame (B)
         R_T_RB = np.array([[-1.000,  0.000,  0.000,  0.358],
@@ -43,12 +53,8 @@ class RepulsiveForcePublisher(Node):
         # Homogeneous transformation matrix from robot base frame (R) to camera frame (C)
         self.R_T_RC = R_T_RB @ B_T_BC @ C_T_CC
 
-        # Read point cloud data from .ply file
-        self.file = '/home/anyba/franka_ros2_ws/src/repulsive_force/point_cloud_data/pc_workspace.ply'
-        self.point_cloud = o3d.io.read_point_cloud(self.file)
-
-        # Timer for publishing repulsive force every 0.03 seconds
-        self.timer = self.create_timer(0.03, self.publish_F_repulsion)
+        # Timer for publishing repulsive force every 0.02 seconds
+        self.timer = self.create_timer(0.02, self.publish_F_repulsion)
 
     def robot_state_callback(self, msg: FrankaRobotState):
         # Get end effector position
@@ -70,24 +76,30 @@ class RepulsiveForcePublisher(Node):
 
     def remove_robot_arm(self, point_cloud: o3d.geometry.PointCloud):
         # Split point cloud into smaller workspace and outside workspace
-        min_bound = np.array([-0.4, -0.9, 0.01])
+        min_bound = np.array([-0.4, -0.9, 0.03])
         max_bound = np.array([1.2, 0.9, 1.4])
         bbox = o3d.geometry.AxisAlignedBoundingBox(min_bound=min_bound, max_bound=max_bound)
         indices = bbox.get_point_indices_within_bounding_box(point_cloud.points)
         point_cloud_workspace = point_cloud.select_by_index(indices, invert=False)
         point_cloud_outside = point_cloud.select_by_index(indices, invert=True)
 
-        # Apply DBSCAN clustering
-        dbscan = DBSCAN(eps=0.089, min_samples=100)
-        dbscan.fit(np.asarray(point_cloud_workspace.points))
-        labels = dbscan.labels_
+        # Apply MinMaxScaler to normalize point cloud data
+        data = np.asarray(point_cloud_workspace.points)
+        scaler = MinMaxScaler()
+        scaler.fit([min_bound, max_bound])
+        data = scaler.transform(data)
 
-        # Find robot arm label with smallest average distance to origin
+        # Apply DBSCAN clustering
+        dbscan = DBSCAN(eps=0.025, min_samples=4)
+        labels = dbscan.fit_predict(data)
+
+        # Find robot arm label by searching for cluster with smallest average distance to origin and containing more than 100 points
         unique_labels = np.unique(labels)
         distances = np.linalg.norm(np.asarray(point_cloud_workspace.points), axis=1)
-        avg_distances = np.zeros(len(unique_labels))
+        avg_distances = np.full(len(unique_labels), np.inf)
         for i, label in enumerate(unique_labels):
-            avg_distances[i] = np.mean(distances[labels == label])
+            if len(distances[labels == label]) > 100:
+                avg_distances[i] = np.mean(distances[labels == label])
         min_avg_distance_index = np.argmin(avg_distances)
         robot_arm_label = unique_labels[min_avg_distance_index]
 
@@ -98,13 +110,13 @@ class RepulsiveForcePublisher(Node):
         point_cloud_workspace.points = o3d.utility.Vector3dVector(points_data)
         point_cloud_workspace.colors = o3d.utility.Vector3dVector(colors_data)
 
-        return point_cloud_workspace + point_cloud_outside
+        return point_cloud_outside + point_cloud_workspace
 
     def add_obstacle(self, point_cloud: o3d.geometry.PointCloud):
         # Define dimensions of obstacle
         min_bound = np.array([0.45, -0.1, 0.4])
         max_bound = np.array([0.55, 0.1, 0.6])
-        step = 0.01
+        step = 0.02
         x = np.arange(min_bound[0], max_bound[0], step)
         y = np.arange(min_bound[1], max_bound[1], step)
         z = np.arange(min_bound[2], max_bound[2], step)
@@ -121,13 +133,32 @@ class RepulsiveForcePublisher(Node):
         return point_cloud + obstacle
 
     def get_point_cloud(self):
+        # Extract point cloud data from .ply file
+        point_cloud_data = np.concatenate((np.asarray(self.point_cloud.points), np.asarray(self.point_cloud.colors)), axis=1)
+
+        # Randomly sample point cloud data by 1.5%
+        valid_indices = self.indices[self.indices < len(point_cloud_data)]
+        point_cloud_data = point_cloud_data[valid_indices]
+
+        # Remove invalid data values (NaN values) from point cloud data
+        mask = ~np.isnan(point_cloud_data).any(axis=1)
+        point_cloud_data = point_cloud_data[mask]
+
+        # Extract XYZ and RGBA values from point cloud data
+        points_data = point_cloud_data[:, :3]
+        colors_data = point_cloud_data[:, 3:]
+
+        # Save point cloud data as Open3D point cloud
+        point_cloud = o3d.geometry.PointCloud()
+        point_cloud.points = o3d.utility.Vector3dVector(points_data)
+        point_cloud.colors = o3d.utility.Vector3dVector(colors_data)
+
         # Point cloud preprocessing
-        point_cloud = self.point_cloud.uniform_down_sample(every_k_points=40)
         point_cloud = point_cloud.transform(self.R_T_RC)
         point_cloud = self.remove_background(point_cloud)
         point_cloud = self.remove_robot_arm(point_cloud)
-        point_cloud, _ = point_cloud.remove_radius_outlier(nb_points=10, radius=0.05)
-        point_cloud = self.add_obstacle(point_cloud)
+        point_cloud, _ = point_cloud.remove_radius_outlier(nb_points=5, radius=0.05)
+        #point_cloud = self.add_obstacle(point_cloud)
 
         return point_cloud
 
@@ -173,7 +204,7 @@ class RepulsiveForcePublisher(Node):
         point_cloud = self.get_point_cloud()
 
         # Publish point cloud data
-        self.publish_point_cloud(point_cloud)
+        #self.publish_point_cloud(point_cloud)
 
         # Get nearest point in point cloud relative to end effector position
         coordinates, distance = self.get_nearest_point(point_cloud)

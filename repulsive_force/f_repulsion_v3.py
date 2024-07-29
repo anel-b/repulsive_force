@@ -83,6 +83,9 @@ class RepulsiveForcePublisher(Node):
         # Extract point cloud data from ZED camera as X, Y, Z, RGBA values
         point_cloud_data = point_cloud_camera.get_data().reshape(-1, 4)
 
+        # Extract XYZ values from point cloud data
+        points_data = point_cloud_data[:, :3]
+
         # Randomly sample point cloud data by 1.5%
         valid_indices = self.indices[self.indices < len(point_cloud_data)]
         point_cloud_data = point_cloud_data[valid_indices]
@@ -91,21 +94,9 @@ class RepulsiveForcePublisher(Node):
         mask = ~np.isnan(point_cloud_data).any(axis=1)
         point_cloud_data = point_cloud_data[mask]
 
-        # Extract XYZ and RGBA values from point cloud data
-        points_data = point_cloud_data[:, :3]
-        rgba_data = point_cloud_data[:, 3:]
-
-        # Extract RGB values from RGBA format
-        rgba_data = np.frombuffer(rgba_data.tobytes(), dtype=np.uint32)
-        r_data = (rgba_data >> 0) & 0xFF
-        g_data = (rgba_data >> 8) & 0xFF
-        b_data = (rgba_data >> 16) & 0xFF
-        colors_data = np.column_stack((r_data, g_data, b_data)) / 255.0
-
         # Save point cloud data as Open3D point cloud
         point_cloud = o3d.geometry.PointCloud()
         point_cloud.points = o3d.utility.Vector3dVector(points_data)
-        point_cloud.colors = o3d.utility.Vector3dVector(colors_data)
 
         return point_cloud
 
@@ -150,9 +141,7 @@ class RepulsiveForcePublisher(Node):
         # Remove robot arm from workspace
         mask = (labels != robot_arm_label)
         points_data = (np.asarray(point_cloud_workspace.points))[mask]
-        colors_data = (np.asarray(point_cloud_workspace.colors))[mask]
         point_cloud_workspace.points = o3d.utility.Vector3dVector(points_data)
-        point_cloud_workspace.colors = o3d.utility.Vector3dVector(colors_data)
 
         return point_cloud_outside + point_cloud_workspace
 
@@ -166,13 +155,10 @@ class RepulsiveForcePublisher(Node):
         z = np.arange(min_bound[2], max_bound[2], step)
         xx, yy, zz = np.meshgrid(x, y, z)
 
-        # Create point cloud of red obstacle
+        # Create point cloud of obstacle
         points = np.column_stack((xx.ravel(), yy.ravel(), zz.ravel()))
-        colors = np.zeros((len(points), 3))
-        colors[:, 0] = 1.0
         obstacle = o3d.geometry.PointCloud()
         obstacle.points = o3d.utility.Vector3dVector(points)
-        obstacle.colors = o3d.utility.Vector3dVector(colors)
 
         return point_cloud + obstacle
 
@@ -198,10 +184,8 @@ class RepulsiveForcePublisher(Node):
         return point_cloud
 
     def publish_point_cloud(self, point_cloud: o3d.geometry.PointCloud):
-        # Save XYZ and RGB values into numpy arrays
-        points_data = np.asarray(point_cloud.points)
-        colors_data = np.asarray(point_cloud.colors)
-        point_cloud_data = np.concatenate((points_data.astype(np.float32), colors_data.astype(np.float32)), axis=1)
+        # Save XYZ values into numpy array
+        point_cloud_data = np.asarray(point_cloud.points).astype(np.float32)
 
         # Publish point cloud data as PointCloud2 message
         msg = PointCloud2()
@@ -212,12 +196,9 @@ class RepulsiveForcePublisher(Node):
         msg.fields = [
             PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
             PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
-            PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1),
-            PointField(name='r', offset=12, datatype=PointField.FLOAT32, count=1),
-            PointField(name='g', offset=16, datatype=PointField.FLOAT32, count=1),
-            PointField(name='b', offset=20, datatype=PointField.FLOAT32, count=1)]
+            PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1)]
         msg.is_bigendian = False
-        msg.point_step = np.dtype(np.float32).itemsize * 6 # 32-bit float takes 8 bytes * 6 floats (XYZRGB values)
+        msg.point_step = np.dtype(np.float32).itemsize * 3 # 32-bit float takes 8 bytes * 3 floats (XYZ values)
         msg.row_step = msg.point_step * len(point_cloud_data)
         msg.data = point_cloud_data.tobytes()
         msg.is_dense = False
