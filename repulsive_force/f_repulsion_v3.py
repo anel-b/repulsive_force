@@ -120,7 +120,7 @@ class RepulsiveForcePublisher(Node):
 
         # Apply MinMaxScaler to normalize point cloud data
         data = np.asarray(point_cloud_workspace.points)
-        scaler = MinMaxScaler()
+        scaler = MinMaxScaler(feature_range=(0, 1))
         scaler.fit([min_bound, max_bound])
         data = scaler.transform(data)
 
