@@ -6,7 +6,7 @@ ROS 2 Humble package that computes a repulsive force on a robot arm's end effect
 
 ### Containment of "repulsive_force" package:
 
-3 Nodes:<br>
+2 Nodes:<br>
 * f_repulsion.py<br>(computes repulsive force from nearest point in point cloud from .ply file relative to end effector and publishes it)
 * f_repulsion_v2.py<br>(same as f_repulsion.py but with point cloud from ZED camera)
 
