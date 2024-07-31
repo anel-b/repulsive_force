@@ -27,10 +27,10 @@ class RepulsiveForcePublisher(Node):
         # Initialize ZED camera
         self.zed = sl.Camera()
         self.init_params = sl.InitParameters()
-        self.init_params.set_from_serial_number(38580376)
+        self.init_params.set_from_serial_number(30635524)
         self.init_params.camera_resolution = sl.RESOLUTION.HD720
         self.init_params.camera_fps = 60
-        self.init_params.depth_mode = sl.DEPTH_MODE.PERFORMANCE
+        self.init_params.depth_mode = sl.DEPTH_MODE.NEURAL
         self.init_params.coordinate_system = sl.COORDINATE_SYSTEM.RIGHT_HANDED_Y_UP
         self.init_params.coordinate_units = sl.UNIT.METER
 
@@ -53,15 +53,15 @@ class RepulsiveForcePublisher(Node):
                            [ 0.000,  0.000,  0.000,  1.000]])
 
         # Homogeneous transformation matrix from checkerboard frame (B) to camera frame (C)
-        B_T_BC = np.array([[ 0.5357,  0.5685, -0.6244,  0.5918],
-                           [-0.8444,  0.3671, -0.3902,  0.6178],
-                           [ 0.0074,  0.7363,  0.6767, -0.9096],
+        B_T_BC = np.array([[ 0.8690, -0.1971,  0.4538, -0.5035],
+                           [ 0.4943,  0.3069, -0.8133,  1.0069],
+                           [ 0.0210,  0.9311,  0.3642, -0.6867],
                            [ 0.0000,  0.0000,  0.0000,  1.0000]])
 
         # Homogeneous transformation matrix for correcting camera orientation and position
-        C_T_CC = np.array([[ 1.000,  0.000,  0.000,  0.140],
-                           [ 0.000, -1.000,  0.000,  0.040],
-                           [ 0.000,  0.000, -1.000, -0.040],
+        C_T_CC = np.array([[ 1.000,  0.000,  0.000,  0.000],
+                           [ 0.000, -1.000,  0.000,  0.000],
+                           [ 0.000,  0.000, -1.000,  0.000],
                            [ 0.000,  0.000,  0.000,  1.000]])
 
         # Homogeneous transformation matrix from robot base frame (R) to camera frame (C)

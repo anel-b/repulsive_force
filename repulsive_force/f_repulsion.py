@@ -24,7 +24,7 @@ class RepulsiveForcePublisher(Node):
         self.publisher_F_repulsion = self.create_publisher(WrenchStamped, 'F_repulsion_topic', 1)
 
         # Read point cloud data from .ply file
-        self.file = '/home/anyba/franka_ros2_ws/src/repulsive_force/point_cloud_data/pc_workspace.ply'
+        self.file = '/home/anyba/franka_ros2_ws/src/repulsive_force/point_cloud_data/point_cloud_data.ply'
         self.point_cloud = o3d.io.read_point_cloud(self.file)
 
         # Initialize indices for random sampling of point cloud data by 1.5%
@@ -39,15 +39,15 @@ class RepulsiveForcePublisher(Node):
                            [ 0.000,  0.000,  0.000,  1.000]])
 
         # Homogeneous transformation matrix from checkerboard frame (B) to camera frame (C)
-        B_T_BC = np.array([[ 0.5357,  0.5685, -0.6244,  0.5918],
-                           [-0.8444,  0.3671, -0.3902,  0.6178],
-                           [ 0.0074,  0.7363,  0.6767, -0.9096],
+        B_T_BC = np.array([[ 0.8690, -0.1971,  0.4538, -0.5035],
+                           [ 0.4943,  0.3069, -0.8133,  1.0069],
+                           [ 0.0210,  0.9311,  0.3642, -0.6867],
                            [ 0.0000,  0.0000,  0.0000,  1.0000]])
 
         # Homogeneous transformation matrix for correcting camera orientation and position
-        C_T_CC = np.array([[ 1.000,  0.000,  0.000,  0.140],
-                           [ 0.000, -1.000,  0.000,  0.040],
-                           [ 0.000,  0.000, -1.000, -0.040],
+        C_T_CC = np.array([[ 1.000,  0.000,  0.000,  0.000],
+                           [ 0.000, -1.000,  0.000,  0.000],
+                           [ 0.000,  0.000, -1.000,  0.000],
                            [ 0.000,  0.000,  0.000,  1.000]])
 
         # Homogeneous transformation matrix from robot base frame (R) to camera frame (C)
@@ -133,7 +133,7 @@ class RepulsiveForcePublisher(Node):
         return point_cloud + obstacle
 
     def get_point_cloud(self):
-        # Extract point cloud data from .ply file
+        # Extract point cloud data from Open3D point cloud
         point_cloud_data = np.concatenate((np.asarray(self.point_cloud.points), np.asarray(self.point_cloud.colors)), axis=1)
 
         # Randomly sample point cloud data by 1.5%

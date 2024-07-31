@@ -22,7 +22,6 @@ setup(
         'console_scripts': [
             'f_repulsion = repulsive_force.f_repulsion:main',
             'f_repulsion_v2 = repulsive_force.f_repulsion_v2:main',
-            'f_repulsion_v3 = repulsive_force.f_repulsion_v3:main',
         ],
     },
 )
