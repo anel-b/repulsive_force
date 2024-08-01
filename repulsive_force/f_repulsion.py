@@ -27,9 +27,9 @@ class RepulsiveForcePublisher(Node):
         self.file = '/home/anyba/franka_ros2_ws/src/repulsive_force/point_cloud_data/point_cloud_data.ply'
         self.point_cloud = o3d.io.read_point_cloud(self.file)
 
-        # Initialize indices for random sampling of point cloud data by 1.5%
+        # Initialize indices for random sampling of point cloud data by 2.0%
         self.number_of_points = 720 * 1280
-        self.sample = int(self.number_of_points * 0.015)
+        self.sample = int(self.number_of_points * 0.020)
         self.indices = np.random.choice(self.number_of_points, self.sample, replace=False)
 
         # Homogeneous transformation matrix from robot base frame (R) to checkerboard frame (B)
@@ -90,7 +90,7 @@ class RepulsiveForcePublisher(Node):
         data = scaler.transform(data)
 
         # Apply DBSCAN clustering
-        dbscan = DBSCAN(eps=0.025, min_samples=4)
+        dbscan = DBSCAN(eps=0.034, min_samples=4)
         labels = dbscan.fit_predict(data)
 
         # Find robot arm label by searching for cluster with smallest average distance to origin and containing more than 100 points
@@ -114,8 +114,8 @@ class RepulsiveForcePublisher(Node):
 
     def add_obstacle(self, point_cloud: o3d.geometry.PointCloud):
         # Define dimensions of obstacle
-        min_bound = np.array([0.45, -0.1, 0.4])
-        max_bound = np.array([0.55, 0.1, 0.6])
+        min_bound = np.array([0.4, 0.0, 0.3])
+        max_bound = np.array([0.5, 0.1, 0.5])
         step = 0.02
         x = np.arange(min_bound[0], max_bound[0], step)
         y = np.arange(min_bound[1], max_bound[1], step)
