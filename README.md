@@ -21,7 +21,7 @@ Point cloud data:<br>
 
 ### Prerequisites
 
-* Ubuntu 20.04 LTS+ (Linux)
+* Ubuntu 22.04 LTS+ (Linux)
 * [ROS 2 Humble](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html)
 * libfranka 0.13.0+
 * [franka_ros2 v0.13.1](https://support.franka.de/docs/franka_ros2.html)
@@ -31,8 +31,8 @@ Point cloud data:<br>
 * [ZED SDK](https://www.stereolabs.com/developers/release)
 * [ZED Python API](https://www.stereolabs.com/docs/app-development/python/install)
 * [Open3D 0.18.0](https://www.open3d.org/)
-* scikit-learn
 * NumPy <1.25.0 and >=1.17.3
+* scikit-learn
 
 ### Download
 
