@@ -10,6 +10,7 @@ A ROS 2 Humble package that computes a repulsive force on the end effector of a 
 * **f_repulsion_v2.py**
    * computes repulsive force from nearest point in point cloud from ZED camera relative to end effector and publishes it
    * replace '(30635524)' with your ZED camera serial number
+   * replace homogeneous transformation matrices with [camera calibration from pdz](https://github.com/LucasG2001/camera_calibration)
 * **f_repulsion.py**
    * same as f_repulsion_v2.py but with point cloud from .ply file
    * replace '/anyba/' with your PC username
