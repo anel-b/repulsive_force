@@ -1,21 +1,28 @@
-# Repulsive force computation package in ROS 2 Humble with Open3D library
+# Repulsive Force Computation Package in ROS 2 Humble with franka_ros2, ZED Python API, Open3D and scikit-learn
 
 ## Description
 
-ROS 2 Humble package that computes a repulsive force on a robot arm's end effector, pushing it away from the nearest obstacle using point cloud data.
+A ROS 2 Humble package that computes a repulsive force on the end effector of a Franka Emika Research 3 robot arm, pushing it away from the nearest obstacle in the workspace using point cloud data from a Stereolabs ZED 2i stereo camera.
 
-### Containment of "repulsive_force" package:
+### Package Contents of 'repulsive_force':
 
-2 Nodes:<br>
-* f_repulsion.py<br>(computes repulsive force from nearest point in point cloud from .ply file relative to end effector and publishes it)
-* f_repulsion_v2.py<br>(same as f_repulsion.py but with point cloud from ZED camera)
+**2 Nodes:**
+* **f_repulsion_v2.py**
+   * computes repulsive force from nearest point in point cloud from ZED camera relative to end effector and publishes it
+   * replace '(30635524)' with your ZED camera serial number
+* **f_repulsion.py**
+   * same as f_repulsion_v2.py but with point cloud from .ply file
+   * replace '/anyba/' with your PC username
 
-Controller modification ([source](https://github.com/CurdinDeplazes/cartesian_impedance_control)):<br>
-* cartesian_impedance_controller.hpp<br>(declares needed functions and variables)
-* cartesian_impedance_controller.cpp<br>(subscribes to the f_repulsion topic and includes the repulsive force in the controller loop)
+**Controller modification ([source](https://github.com/CurdinDeplazes/cartesian_impedance_control)):**
+* **cartesian_impedance_controller.hpp**
+   * declares required functions and variables
+* **cartesian_impedance_controller.cpp**
+   * subscribes to the f_repulsion topic and adds the repulsive force in the controller loop*
 
-Point cloud data:<br>
-* point_cloud_data.ply<br>(point cloud data as .ply file)
+**Point Cloud data:**
+* **point_cloud_data.ply**
+   * point cloud data from workspace as .ply file
 
 ## Installation
 
@@ -28,7 +35,6 @@ Point cloud data:<br>
 * [cartesian impedance controller from pdz](https://github.com/CurdinDeplazes/cartesian_impedance_control)
 * Python 3.7+
 * setuptools 58.2.0
-* [ZED SDK](https://www.stereolabs.com/developers/release)
 * [ZED Python API](https://www.stereolabs.com/docs/app-development/python/install)
 * [Open3D 0.18.0](https://www.open3d.org/)
 * NumPy <1.25.0 and >=1.17.3
@@ -48,6 +54,25 @@ source ~/franka_ros2_ws/install/setup.bash
 
 Replace the .hpp and .cpp files from the controller with the modified controller files from this repository
 
+## Execution
+
+Start the repulsive force node with a ZED camera:
+
+```bash
+ros2 run repulsive_force f_repulsion_v2
+```
+
+Start the controller with a Franka Emika Research 3 robot arm:
+
+```bash
+ros2 launch cartesian_impedance_control cartesian_impedance_controller.launch.py
+```
+
 ## Extras
 
-[ROS 2 Humble Tutorial in Python](https://www.youtube.com/watch?v=0aPbWsyENA8&list=PLLSegLrePWgJudpPUof4-nVFHGkB62Izy)
+**Controller modifications are marked with:**<br>
+//START Repulsive force<br>
+\*code\*<br>
+//END Repulsive Force<br>
+
+**[ROS 2 Humble Tutorial in Python](https://www.youtube.com/watch?v=0aPbWsyENA8&list=PLLSegLrePWgJudpPUof4-nVFHGkB62Izy)**
