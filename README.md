@@ -78,4 +78,4 @@ ros2 launch cartesian_impedance_control cartesian_impedance_controller.launch.py
 
 ## Extras
 
-[ROS 2 Humble Tutorial in Python](https://www.youtube.com/watch?v=0aPbWsyENA8&list=PLLSegLrePWgJudpPUof4-nVFHGkB62Izy)
+For setting up a ROS 2 package in Python, the following YouTube tutorial playlist can be checked out: [ROS 2 Humble Tutorial in Python](https://www.youtube.com/watch?v=0aPbWsyENA8&list=PLLSegLrePWgJudpPUof4-nVFHGkB62Izy)
