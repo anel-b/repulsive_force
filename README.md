@@ -2,7 +2,7 @@
 
 ## Description
 
-A ROS 2 Humble package that computes a repulsive force on the end effector of a Franka Emika Research 3 robot arm, pushing it away from the nearest obstacle in the workspace using point cloud data from a Stereolabs ZED 2i stereo camera.
+A ROS 2 Humble package that computes a repulsive force from the Artificial Potential Field Method on the end effector of a Franka Emika Research 3 robot arm, pushing it away from the nearest obstacle in the workspace using point cloud data from a Stereolabs ZED 2i stereo camera.
 
 ### Package Contents of 'repulsive_force':
 
@@ -19,9 +19,9 @@ A ROS 2 Humble package that computes a repulsive force on the end effector of a 
 * **cartesian_impedance_controller.hpp**
    * declares required functions and variables
 * **cartesian_impedance_controller.cpp**
-   * subscribes to the f_repulsion topic and adds the repulsive force in the controller loop*
+   * subscribes to the f_repulsion topic and adds the repulsive force in the controller loop
 
-**Point Cloud data:**
+**Point cloud data:**
 * **point_cloud_data.ply**
    * point cloud data from workspace as .ply file
 
@@ -43,6 +43,8 @@ A ROS 2 Humble package that computes a repulsive force on the end effector of a 
 
 ### Download
 
+Change your current directory in the terminal to the 'src' folder within your 'franka_ros2' workspace. Clone the repository into this folder. Then, navigate back to the directory of your 'franka_ros2' workspace, build the package with 'colcon', and 'source' the setup file. These are the commands for the terminal:
+
 ```bash
 cd ~/franka_ros2_ws/src/
 git clone https://github.com/anel-b/repulsive_force.git
@@ -54,6 +56,11 @@ source ~/franka_ros2_ws/install/setup.bash
 ### Controller
 
 Replace the .hpp and .cpp files from the controller with the modified controller files from this repository
+
+Controller modifications are marked with:<br>
+//START Repulsive force<br>
+\*code\*<br>
+//END Repulsive Force<br>
 
 ## Execution
 
@@ -71,9 +78,4 @@ ros2 launch cartesian_impedance_control cartesian_impedance_controller.launch.py
 
 ## Extras
 
-**Controller modifications are marked with:**<br>
-//START Repulsive force<br>
-\*code\*<br>
-//END Repulsive Force<br>
-
-**[ROS 2 Humble Tutorial in Python](https://www.youtube.com/watch?v=0aPbWsyENA8&list=PLLSegLrePWgJudpPUof4-nVFHGkB62Izy)**
+[ROS 2 Humble Tutorial in Python](https://www.youtube.com/watch?v=0aPbWsyENA8&list=PLLSegLrePWgJudpPUof4-nVFHGkB62Izy)
