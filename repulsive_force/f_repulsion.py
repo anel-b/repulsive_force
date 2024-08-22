@@ -32,26 +32,26 @@ class RepulsiveForcePublisher(Node):
         self.sample = int(self.number_of_points * 0.020)
         self.indices = np.random.choice(self.number_of_points, self.sample, replace=False)
 
-        # Homogeneous transformation matrix from robot base frame (R) to checkerboard frame (B)
-        R_T_RB = np.array([[-1.000,  0.000,  0.000,  0.358],
-                           [ 0.000,  1.000,  0.000,  0.030],
-                           [ 0.000,  0.000, -1.000,  0.006],
-                           [ 0.000,  0.000,  0.000,  1.000]])
+        # Homogeneous transformation matrix from robot base frame R to checkerboard frame B
+        T_RB = np.array([[-1.000,  0.000,  0.000,  0.358],
+                         [ 0.000,  1.000,  0.000,  0.030],
+                         [ 0.000,  0.000, -1.000,  0.006],
+                         [ 0.000,  0.000,  0.000,  1.000]])
 
-        # Homogeneous transformation matrix from checkerboard frame (B) to camera frame (C)
-        B_T_BC = np.array([[ 0.8690, -0.1971,  0.4538, -0.5035],
-                           [ 0.4943,  0.3069, -0.8133,  1.0069],
-                           [ 0.0210,  0.9311,  0.3642, -0.6867],
-                           [ 0.0000,  0.0000,  0.0000,  1.0000]])
+        # Homogeneous transformation matrix from checkerboard frame B to camera frame C
+        T_BC = np.array([[ 0.8690, -0.1971,  0.4538, -0.5035],
+                         [ 0.4943,  0.3069, -0.8133,  1.0069],
+                         [ 0.0210,  0.9311,  0.3642, -0.6867],
+                         [ 0.0000,  0.0000,  0.0000,  1.0000]])
 
         # Homogeneous transformation matrix for correcting camera orientation and position
-        C_T_CC = np.array([[ 1.000,  0.000,  0.000,  0.000],
-                           [ 0.000, -1.000,  0.000,  0.000],
-                           [ 0.000,  0.000, -1.000,  0.000],
-                           [ 0.000,  0.000,  0.000,  1.000]])
+        T_CC = np.array([[ 1.000,  0.000,  0.000,  0.000],
+                         [ 0.000, -1.000,  0.000,  0.000],
+                         [ 0.000,  0.000, -1.000,  0.000],
+                         [ 0.000,  0.000,  0.000,  1.000]])
 
-        # Homogeneous transformation matrix from robot base frame (R) to camera frame (C)
-        self.R_T_RC = R_T_RB @ B_T_BC @ C_T_CC
+        # Homogeneous transformation matrix from robot base frame R to camera frame C
+        self.T_RC = T_RB @ T_BC @ T_CC
 
         # Timer for publishing repulsive force every 0.02 seconds
         self.timer = self.create_timer(0.02, self.publish_F_repulsion)
@@ -154,7 +154,7 @@ class RepulsiveForcePublisher(Node):
         point_cloud.colors = o3d.utility.Vector3dVector(colors_data)
 
         # Point cloud preprocessing
-        point_cloud = point_cloud.transform(self.R_T_RC)
+        point_cloud = point_cloud.transform(self.T_RC)
         point_cloud = self.remove_background(point_cloud)
         point_cloud = self.remove_robot_arm(point_cloud)
         point_cloud, _ = point_cloud.remove_radius_outlier(nb_points=5, radius=0.05)
