@@ -2,7 +2,7 @@
 
 ## Description
 
-A ROS 2 Humble package that computes a repulsive force from the Artificial Potential Field Method on the end effector of a Franka Emika Research 3 robot arm, pushing it away from the nearest obstacle in the workspace using point cloud data from a Stereolabs ZED 2i stereo camera.
+A ROS 2 Humble package that computes a repulsive force from the Artificial Potential Field Method on the end effector of a Franka Research 3 robot arm, pushing it away from the nearest obstacle in the workspace using point cloud data from a Stereolabs ZED 2i stereo camera.
 
 ### Package Contents of 'repulsive_force':
 
@@ -70,7 +70,7 @@ Start the repulsive force node with a ZED camera:
 ros2 run repulsive_force f_repulsion_v2
 ```
 
-Start the controller with a Franka Emika Research 3 robot arm:
+Start the controller with a Franka Research 3 robot arm:
 
 ```bash
 ros2 launch cartesian_impedance_control cartesian_impedance_controller.launch.py
