@@ -9,19 +9,15 @@ A ROS 2 Humble package that computes a repulsive force from the Artificial Poten
 **2 Nodes:**
 * **f_repulsion_v2.py**
    * computes repulsive force from nearest point in point cloud from ZED camera relative to end effector and publishes it
-   * replace '(30635524)' with your ZED camera serial number
-   * replace homogeneous transformation matrices with [camera calibration from pdz](https://github.com/LucasG2001/camera_calibration)
-   * calibrate DBSCAN parameters '(eps=0.034, min_samples=4)'
 
 * **f_repulsion.py**
    * same as f_repulsion_v2.py but with point cloud from .ply file
-   * replace '/anyba/' with your PC username
 
 **Controller modification ([source](https://github.com/CurdinDeplazes/cartesian_impedance_control)):**
 * **cartesian_impedance_controller.hpp**
-   * declares required functions and variables
+   * initialization of required functions and variables
 * **cartesian_impedance_controller.cpp**
-   * subscribes to the f_repulsion topic and adds the repulsive force in the controller loop
+   * subscription to f_repulsion_topic and including repulsive force in controller loop
 
 **Point cloud data:**
 * **point_cloud_data.ply**
@@ -54,6 +50,16 @@ cd ~/franka_ros2_ws/
 colcon build --packages-select repulsive_force
 source ~/franka_ros2_ws/install/setup.bash
 ```
+
+### Configurations
+
+* **f_repulsion_v2.py**
+   * replace '(30635524)' with your ZED camera serial number
+   * replace homogeneous transformation matrices with [camera calibration from pdz](https://github.com/LucasG2001/camera_calibration)
+   * calibrate DBSCAN parameters '(eps=0.034, min_samples=4)'
+
+* **f_repulsion.py**
+   * replace '/anyba/' with your PC username
 
 ### Controller
 
