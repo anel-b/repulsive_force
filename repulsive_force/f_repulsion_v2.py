@@ -52,6 +52,9 @@ class RepulsiveForcePublisher(Node):
                          [ 0.000,  0.000, -1.000,  0.006],
                          [ 0.000,  0.000,  0.000,  1.000]])
 
+        # Homogeneous transformation matrix from checkerboard frame B to robot base frame R
+        T_RB = np.linalg.inv(T_BR)
+
         # Homogeneous transformation matrix from camera frame C to checkerboard frame B
         T_BC = np.array([[ 0.8690, -0.1971,  0.4538, -0.5035],
                          [ 0.4943,  0.3069, -0.8133,  1.0069],
@@ -65,7 +68,7 @@ class RepulsiveForcePublisher(Node):
                          [ 0.000,  0.000,  0.000,  1.000]])
 
         # Homogeneous transformation matrix from camera frame C to robot base frame R
-        self.T_RC = np.linalg.inv(T_BR) @ T_BC @ T_CC
+        self.T_RC = T_RB @ T_BC @ T_CC
 
         # Timer for publishing repulsive force every 0.02 seconds
         self.timer = self.create_timer(0.02, self.publish_F_repulsion)
