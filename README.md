@@ -2,7 +2,7 @@
 
 ## Description
 
-A ROS 2 Humble package that computes a repulsive force from the Artificial Potential Field Method on the end effector of a Franka Research 3 robot arm, pushing it away from the nearest obstacle in the workspace using point cloud data from a Stereolabs ZED 2i stereo camera.
+A ROS 2 Humble package that computes a repulsive force from the Artificial Potential Field Method on the end effector of a Franka Research 3 robot arm, pushing it away from the nearest obstacle in the workspace using point cloud data from a Stereolabs ZED stereo camera.
 
 ### Package Contents of 'repulsive_force':
 
@@ -11,6 +11,8 @@ A ROS 2 Humble package that computes a repulsive force from the Artificial Poten
    * computes repulsive force from nearest point in point cloud from ZED camera relative to end effector and publishes it
    * replace '(30635524)' with your ZED camera serial number
    * replace homogeneous transformation matrices with [camera calibration from pdz](https://github.com/LucasG2001/camera_calibration)
+   * calibrate DBSCAN parameters '(eps=0.034, min_samples=4)'
+
 * **f_repulsion.py**
    * same as f_repulsion_v2.py but with point cloud from .ply file
    * replace '/anyba/' with your PC username
