@@ -4,24 +4,24 @@
 
 A ROS 2 Humble package that computes a repulsive force from the Artificial Potential Field Method on the end effector of a Franka Research 3 robot arm, pushing it away from the nearest obstacle in the workspace using point cloud data from a Stereolabs ZED stereo camera.
 
-### Package Contents of 'repulsive_force':
+### Package Contents of `repulsive_force`:
 
 **2 Nodes:**
 * **f_repulsion_v2.py**
-   * computes repulsive force from nearest point in point cloud from ZED camera relative to end effector and publishes it
+   * Computes repulsive force from nearest point in point cloud from ZED camera relative to end effector and publishes it.
 
 * **f_repulsion.py**
-   * same as f_repulsion_v2.py but with point cloud from .ply file
+   * Same as `f_repulsion_v2.py` but with point cloud from .ply file.
 
 **Controller modification ([source](https://github.com/CurdinDeplazes/cartesian_impedance_control)):**
 * **cartesian_impedance_controller.hpp**
-   * initialization of required functions and variables
+   * Initialization of required functions and variables.
 * **cartesian_impedance_controller.cpp**
-   * subscription to f_repulsion_topic and including repulsive force in controller loop
+   * Subscription to "f_repulsion_topic" topic and including repulsive force in controller loop.
 
 **Point cloud data:**
 * **point_cloud_data.ply**
-   * point cloud data from workspace as .ply file
+   * Point cloud data from workspace as .ply file.
 
 ## Installation
 
@@ -41,7 +41,7 @@ A ROS 2 Humble package that computes a repulsive force from the Artificial Poten
 
 ### Download
 
-Change your current directory in the terminal to the 'src' folder within your 'franka_ros2' workspace. Clone the repository into this folder. Then, navigate back to the directory of your 'franka_ros2' workspace, build the package with 'colcon', and 'source' the setup file. These are the commands for the terminal:
+Change your current directory in the terminal to the `src` folder within your `franka_ros2` workspace. Clone the repository into this folder. Then, navigate back to the directory of your `franka_ros2` workspace, build the package with colcon, and source the setup file. These are the commands for the terminal:
 
 ```bash
 cd ~/franka_ros2_ws/src/
@@ -54,16 +54,16 @@ source ~/franka_ros2_ws/install/setup.bash
 ### Configurations
 
 * **f_repulsion_v2.py**
-   * replace '(30635524)' with your ZED camera serial number
-   * replace homogeneous transformation matrices with [camera calibration from pdz](https://github.com/LucasG2001/camera_calibration)
-   * calibrate DBSCAN parameters '(eps=0.034, min_samples=4)'
+   * Replace (30635524) with your ZED camera serial number.
+   * Replace homogeneous transformation matrices with [camera calibration from pdz](https://github.com/LucasG2001/camera_calibration).
+   * Calibrate DBSCAN parameters (eps=0.034, min_samples=4).
 
 * **f_repulsion.py**
-   * replace '/anyba/' with your PC username
+   * Replace /anyba/ with your PC username.
 
 ### Controller
 
-Replace the .hpp and .cpp files from the controller with the modified controller files from this repository
+Replace the .hpp and .cpp files from the controller with the modified controller files from this repository.
 
 Controller modifications are marked with:<br>
 //START Repulsive force<br>
