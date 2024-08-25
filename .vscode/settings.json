@@ -1,0 +1,26 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/anyba/franka_ros2_ws/install/my_pointcloud/lib/python3.10/site-packages",
+        "/home/anyba/franka_ros2_ws/install/messages_fr3/local/lib/python3.10/dist-packages",
+        "/home/anyba/franka_ros2_ws/install/franka_gripper/local/lib/python3.10/dist-packages",
+        "/home/anyba/franka_ros2_ws/install/franka_msgs/local/lib/python3.10/dist-packages",
+        "/home/anyba/ws_moveit2/install/moveit_configs_utils/lib/python3.10/site-packages",
+        "/home/anyba/ws_moveit2/install/srdfdom/local/lib/python3.10/dist-packages",
+        "/home/anyba/ws_moveit2/install/moveit_task_constructor_msgs/local/lib/python3.10/dist-packages",
+        "/home/anyba/ws_moveit2/install/launch_param_builder/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/anyba/franka_ros2_ws/install/my_pointcloud/lib/python3.10/site-packages",
+        "/home/anyba/franka_ros2_ws/install/messages_fr3/local/lib/python3.10/dist-packages",
+        "/home/anyba/franka_ros2_ws/install/franka_gripper/local/lib/python3.10/dist-packages",
+        "/home/anyba/franka_ros2_ws/install/franka_msgs/local/lib/python3.10/dist-packages",
+        "/home/anyba/ws_moveit2/install/moveit_configs_utils/lib/python3.10/site-packages",
+        "/home/anyba/ws_moveit2/install/srdfdom/local/lib/python3.10/dist-packages",
+        "/home/anyba/ws_moveit2/install/moveit_task_constructor_msgs/local/lib/python3.10/dist-packages",
+        "/home/anyba/ws_moveit2/install/launch_param_builder/lib/python3.10/site-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ]
+}
