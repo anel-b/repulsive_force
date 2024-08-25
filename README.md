@@ -11,7 +11,7 @@ A ROS 2 Humble package that computes a repulsive force from the Artificial Poten
    * Computes repulsive force from nearest point in point cloud from ZED camera relative to end effector and publishes it.
 
 * **f_repulsion.py**
-   * Same as `f_repulsion_v2.py` but with point cloud from .ply file.
+   * Same as **f_repulsion_v2.py** but with point cloud from .ply file.
 
 **Controller modification ([source](https://github.com/CurdinDeplazes/cartesian_impedance_control)):**
 * **cartesian_impedance_controller.hpp**
@@ -41,7 +41,7 @@ A ROS 2 Humble package that computes a repulsive force from the Artificial Poten
 
 ### Download
 
-Change your current directory in the terminal to the `src` folder within your `franka_ros2` workspace. Clone the repository into this folder. Then, navigate back to the directory of your `franka_ros2` workspace, build the package with colcon, and source the setup file. These are the commands for the terminal:
+Change your current directory in the terminal to the **src** folder within your **franka_ros2** workspace. Clone the repository into this folder. Then, navigate back to the directory of your **franka_ros2** workspace, build the package with colcon, and source the setup file. These are the commands for the terminal:
 
 ```bash
 cd ~/franka_ros2_ws/src/
