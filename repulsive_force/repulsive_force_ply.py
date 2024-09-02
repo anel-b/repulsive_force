@@ -146,6 +146,10 @@ class RepulsiveForcePublisher(Node):
         points_data = point_cloud_data[:, :3]
         colors_data = point_cloud_data[:, 3:]
 
+        # Convert point cloud data to contiguous arrays
+        points_data = np.ascontiguousarray(points_data)
+        colors_data = np.ascontiguousarray(colors_data)
+
         # Save point cloud data as Open3D point cloud
         point_cloud = o3d.geometry.PointCloud()
         point_cloud.points = o3d.utility.Vector3dVector(points_data)
@@ -264,7 +268,7 @@ class RepulsiveForcePublisher(Node):
 
         # Compute repulsive force with tangential component
         F_tangential = np.linalg.norm(F_repulsion) * unit_vector
-        F_repulsion = (1 - gain_tangential) * F_repulsion + gain_tangential * F_tangential
+        F_repulsion += gain_tangential * F_tangential
 
         # Limit magnitude of repulsive force
         magnitude = np.linalg.norm(F_repulsion)
